@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import './SignupPage.css';
 import hdLogo from '../assets/hd.png';
 import heroImg from '../assets/hero_img.jpg';
-import mobileImage from '../assets/statusbar.png';
+import mobileImage from '../assets/img.svg';
 
 const SignupPage: React.FC = () => {
   const [formData, setFormData] = useState({

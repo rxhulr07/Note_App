@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import './SigninPage.css';
 import hdLogo from '../assets/hd.png';
 import heroImg from '../assets/hero_img.jpg';
+import mobileImage from '../assets/img.svg';
 
 const SigninPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -32,17 +33,11 @@ const SigninPage: React.FC = () => {
 
   return (
     <div className="signin-container">
-      {/* Mobile Status Bar */}
-      <div className="mobile-status-bar">
-        <span className="time">9:41</span>
-        <div className="status-icons">
-          <div className="signal"></div>
-          <div className="wifi"></div>
-          <div className="battery"></div>
-        </div>
-      </div>
-
       <div className="signin-content">
+        {/* Mobile Image */}
+        <div className="mobile-image-section">
+          <img src={mobileImage} alt="Mobile" className="mobile-image" />
+        </div>
         {/* Left Column - Form */}
         <div className="form-section">
           {/* Header */}
