@@ -1,0 +1,160 @@
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import './SignupPage.css';
+import hdLogo from '../assets/hd.png';
+import heroImg from '../assets/hero_img.jpg';
+import mobileImage from '../assets/statusbar.png';
+
+const SignupPage: React.FC = () => {
+  const [formData, setFormData] = useState({
+    name: 'Jonas Khanwald',
+    dateOfBirth: '11 December 1997',
+    email: 'jonas_kahnwald@gmail.com',
+    otp: ''
+  });
+  const [showOtpSection, setShowOtpSection] = useState(false);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleGetOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle OTP generation logic here
+    console.log('Getting OTP for:', formData);
+    setShowOtpSection(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle signup logic here
+    console.log('Signup data:', formData);
+  };
+
+  return (
+    <div className="signup-container">
+             <div className="signup-content">
+         {/* Mobile Image */}
+         <div className="mobile-image-section">
+           <img src={mobileImage} alt="Mobile" className="mobile-image" />
+         </div>
+         
+         {/* Left Column - Form */}
+         <div className="form-section">
+          {/* Header */}
+          <div className="header">
+            <div className="logo">
+              <img src={hdLogo} alt="HD Logo" className="hd-logo" />
+            </div>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="signup-form">
+            <div className="title-section">
+              <h1 className="title">Sign up</h1>
+              <p className="subtitle">Sign up to enjoy the feature of HD</p>
+            </div>
+
+            <div className="form-group">
+              <div className="floating-label-container">
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="form-input"
+                  placeholder=" "
+                />
+                <label htmlFor="name" className="floating-label">Your Name</label>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <div className="floating-label-container">
+                <div className="date-input-container">
+                  <span className="calendar-icon">📅</span>
+                  <input
+                    type="text"
+                    id="dateOfBirth"
+                    name="dateOfBirth"
+                    value={formData.dateOfBirth}
+                    onChange={handleInputChange}
+                    className="form-input"
+                    placeholder=" "
+                  />
+                </div>
+                <label htmlFor="dateOfBirth" className="floating-label">Date of Birth</label>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <div className="floating-label-container">
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="form-input"
+                  placeholder=" "
+                />
+                <label htmlFor="email" className="floating-label">Email</label>
+              </div>
+            </div>
+
+            {showOtpSection && (
+              <div className="form-group">
+                <div className="otp-input-container">
+                  <input
+                    type="text"
+                    id="otp"
+                    name="otp"
+                    value={formData.otp}
+                    onChange={handleInputChange}
+                    placeholder="OTP"
+                    className="form-input"
+                  />
+                  <span className="eye-icon">👁️</span>
+                </div>
+              </div>
+            )}
+
+            <button 
+              type="button" 
+              onClick={handleGetOtp} 
+              className={`get-otp-button ${showOtpSection ? 'hidden' : ''}`}
+            >
+              Get OTP
+            </button>
+            
+            <button 
+              type="submit" 
+              className={`signup-button ${!showOtpSection ? 'hidden' : ''}`}
+            >
+              Sign up
+            </button>
+
+            <div className="signin-link">
+              <span>Already have an account?? </span>
+              <Link to="/login" className="link">Sign in</Link>
+            </div>
+          </form>
+        </div>
+
+                 {/* Right Column - Hero Image (Desktop only) */}
+         <div className="graphic-section">
+           <div className="hero-image-container">
+             <img src={heroImg} alt="Hero" className="hero-image" />
+           </div>
+         </div>
+      </div>
+    </div>
+  );
+};
+
+export default SignupPage;
