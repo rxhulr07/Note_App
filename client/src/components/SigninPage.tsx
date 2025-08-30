@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate} from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
 import './SigninPage.css';
@@ -9,14 +9,14 @@ import mobileImage from '../assets/img.svg';
 
 const SigninPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation();
   const { getOTP, verifyOTP, googleSignIn } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     otp: ''
   });
 
-  const [showOtp, setShowOtp] = useState(false);
+  // const [showOtp, setShowOtp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
