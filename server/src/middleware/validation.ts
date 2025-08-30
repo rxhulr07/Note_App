@@ -1,21 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
 
 export const validateSignup = (req: Request, res: Response, next: NextFunction) => {
-  const { name, email, dateOfBirth, password } = req.body;
+  const { name, email, dateOfBirth } = req.body;
 
   // Check if all required fields are present
-  if (!name || !email || !dateOfBirth || !password) {
+  if (!name || !email || !dateOfBirth) {
     return res.status(400).json({
       success: false,
-      message: 'All fields are required: name, email, dateOfBirth, password'
+      message: 'All fields are required: name, email, dateOfBirth'
     });
   }
 
   // Validate name
-  if (typeof name !== 'string' || name.trim().length < 2 || name.trim().length > 50) {
+  if (typeof name !== 'string' || name.trim().length < 2) {
     return res.status(400).json({
       success: false,
-      message: 'Name must be between 2 and 50 characters'
+      message: 'Name must be at least 2 characters long'
     });
   }
 
@@ -33,14 +33,6 @@ export const validateSignup = (req: Request, res: Response, next: NextFunction) 
     return res.status(400).json({
       success: false,
       message: 'Date of birth is required'
-    });
-  }
-
-  // Validate password
-  if (typeof password !== 'string' || password.length < 6) {
-    return res.status(400).json({
-      success: false,
-      message: 'Password must be at least 6 characters long'
     });
   }
 

@@ -185,33 +185,34 @@
 
 .resend-link {
   color: #007bff;
-  text-decoration: none;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
   font-size: 14px;
-  font-weight: 500;
+  padding: 0;
+  margin: 0;
 }
 
 .resend-link:hover {
   color: #0056b3;
-  text-decoration: underline;
 }
 
 /* Form Options */
 .form-options {
   display: flex;
-  justify-content: flex-start;
   align-items: center;
-  margin-bottom: 24px;
-  font-size: 14px;
+  justify-content: space-between;
+  margin: 20px 0;
   width: 100%;
-  max-width: 343px;
 }
 
 .checkbox-container {
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #666;
   cursor: pointer;
+  font-size: 14px;
+  color: #666;
 }
 
 .checkbox-container input[type="checkbox"] {
@@ -229,6 +230,30 @@
 .forgot-password:hover {
   color: #0056b3;
   text-decoration: underline;
+}
+
+/* Get OTP Button */
+.get-otp-button {
+  width: 100%;
+  max-width: 343px;
+  padding: 16px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 16px;
+}
+
+.get-otp-button:hover {
+  background: #0056b3;
+}
+
+.get-otp-button:active {
+  transform: translateY(1px);
 }
 
 /* Signin Button */
@@ -253,6 +278,29 @@
 
 .signin-button:active {
   transform: translateY(1px);
+}
+
+/* Message Styles */
+.message {
+  width: 100%;
+  max-width: 343px;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.message.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.message.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
 }
 
 /* Signup Link */
@@ -353,6 +401,10 @@
     max-width: 399px;
   }
   
+  .get-otp-button {
+    max-width: 399px;
+  }
+  
   .signin-button {
     max-width: 399px;
   }
@@ -382,6 +434,32 @@
     max-width: 1440px;
     margin: 0 auto;
   }
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  text-align: center;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.divider span {
+  padding: 0 10px;
+  color: #666;
+  font-size: 14px;
+  background: white;
+}
+
+.google-auth-section {
+  display: flex;
+  align-items: center;
 }
 
 

@@ -1,17 +1,27 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 import './SigninPage.css';
 import hdLogo from '../assets/hd.png';
 import heroImg from '../assets/hero_img.jpg';
 import mobileImage from '../assets/img.svg';
 
 const SigninPage: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { getOTP, verifyOTP, googleSignIn } = useAuth();
   const [formData, setFormData] = useState({
-    email: 'jonas_kahnwald@gmail.com',
+    email: '',
     otp: ''
   });
 
   const [showOtp, setShowOtp] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'success' | 'error'>('success');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpEntered, setOtpEntered] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -19,12 +29,63 @@ const SigninPage: React.FC = () => {
       ...prev,
       [name]: value
     }));
+    
+    // Track when OTP is entered
+    if (name === 'otp') {
+      setOtpEntered(value.length > 0);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle signin logic here
-    console.log('Signin data:', formData);
+    try {
+      setIsLoading(true);
+      setMessage('');
+
+      // Check if both email and OTP are provided
+      if (!formData.email || !formData.otp) {
+        setMessage('Please fill in both email and OTP');
+        setMessageType('error');
+        return;
+      }
+
+      // Verify OTP
+      await verifyOTP(formData.email, formData.otp);
+      setMessage('Login successful! Redirecting...');
+      setMessageType('success');
+      
+      // Redirect to dashboard or intended page
+      const from = (location.state as any)?.from?.pathname || '/dashboard';
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 2000);
+    } catch (error: any) {
+      setMessage(error.message || 'Sign in failed');
+      setMessageType('error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      setIsLoading(true);
+      setMessage('');
+      await googleSignIn(credentialResponse.credential);
+      setMessage('Signed in successfully with Google!');
+      setMessageType('success');
+      setTimeout(() => navigate('/dashboard'), 2000);
+    } catch (error: any) {
+      setMessage(error.message || 'Google sign in failed');
+      setMessageType('error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setMessage('Google sign in failed. Please try again.');
+    setMessageType('error');
   };
 
   const toggleOtpVisibility = () => {
@@ -38,6 +99,7 @@ const SigninPage: React.FC = () => {
         <div className="mobile-image-section">
           <img src={mobileImage} alt="Mobile" className="mobile-image" />
         </div>
+        
         {/* Left Column - Form */}
         <div className="form-section">
           {/* Header */}
@@ -53,6 +115,12 @@ const SigninPage: React.FC = () => {
               <h1 className="title">Sign in</h1>
               <p className="subtitle">Please login to continue to your account</p>
             </div>
+
+            {message && (
+              <div className={`message ${messageType === 'success' ? 'success' : 'error'}`}>
+                {message}
+              </div>
+            )}
 
             <div className="form-group">
               <div className="floating-label-container">
@@ -72,27 +140,31 @@ const SigninPage: React.FC = () => {
             <div className="form-group">
               <div className="otp-input-container">
                 <input
-                  type={showOtp ? "text" : "password"}
+                  type="text"
                   id="otp"
                   name="otp"
                   value={formData.otp}
                   onChange={handleInputChange}
-                  className="form-input"
                   placeholder="OTP"
+                  className="form-input"
                 />
-                <span 
-                  className="eye-icon"
-                  onClick={toggleOtpVisibility}
-                >
-                  {showOtp ? '👁️' : '🙈'}
-                </span>
+                <span className="eye-icon">👁️</span>
               </div>
             </div>
 
             <div className="resend-otp">
-              <Link to="/resend-otp" className="resend-link">
+              <button 
+                type="button"
+                onClick={() => {
+                  setOtpSent(false);
+                  setOtpEntered(false);
+                  setFormData(prev => ({ ...prev, otp: '' }));
+                  setMessage('');
+                }}
+                className="resend-link"
+              >
                 Resend OTP
-              </Link>
+              </button>
             </div>
 
             <div className="form-options">
@@ -101,10 +173,51 @@ const SigninPage: React.FC = () => {
                 <span className="checkmark"></span>
                 Keep me logged in
               </label>
+              
+              {/* Google OAuth button next to checkbox */}
+              <div className="google-auth-section">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  useOneTap
+                  theme="filled_blue"
+                  size="medium"
+                  text="signin_with"
+                  shape="rectangular"
+                />
+              </div>
             </div>
 
-            <button type="submit" className="signin-button">
-              Sign in
+            <button 
+              type={otpSent && otpEntered ? "submit" : "button"}
+              onClick={otpSent && otpEntered ? undefined : async () => {
+                if (!formData.email) {
+                  setMessage('Please enter your email first');
+                  setMessageType('error');
+                  return;
+                }
+                try {
+                  setIsLoading(true);
+                  setMessage('');
+                  await getOTP(formData.email);
+                  setOtpSent(true);
+                  setOtpEntered(false);
+                  setFormData(prev => ({ ...prev, otp: '' }));
+                  setMessage('OTP sent to your email! Please check and enter above.');
+                  setMessageType('success');
+                } catch (error: any) {
+                  setMessage(error.message || 'Failed to send OTP');
+                  setMessageType('error');
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              disabled={isLoading}
+              className={otpSent && otpEntered ? "signin-button" : "get-otp-button"}
+            >
+              {isLoading ? 'Processing...' : 
+                otpSent && otpEntered ? 'Sign in' : 'Get OTP'
+              }
             </button>
 
             <div className="signup-link">

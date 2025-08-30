@@ -1,27 +1,22 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
 import User, { IUser } from '../models/User';
 import { sendOTPEmail } from '../utils/email';
-import { validateSignup, validateSignin } from '../middleware/validation';
+import { validateSignup } from '../middleware/validation';
 import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Generate JWT token
 const generateToken = (userId: string): string => {
-  return jwt.sign(
-    { userId },
-    process.env.JWT_SECRET || 'your-secret-key',
-    { expiresIn: '7d' }
-  );
+  return jwt.sign({ userId }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '7d' });
 };
 
-// @route   POST /api/auth/signup
-// @desc    Register a new user
-// @access  Public
+// Signup route - no password required
 router.post('/signup', validateSignup, async (req, res) => {
   try {
-    const { name, email, dateOfBirth, password } = req.body;
+    const { name, email, dateOfBirth } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -37,7 +32,7 @@ router.post('/signup', validateSignup, async (req, res) => {
       name,
       email,
       dateOfBirth,
-      password
+      authMethod: 'email'
     });
 
     // Generate OTP
@@ -72,9 +67,7 @@ router.post('/signup', validateSignup, async (req, res) => {
   }
 });
 
-// @route   POST /api/auth/get-otp
-// @desc    Generate and send OTP for existing user
-// @access  Public
+// Get OTP route
 router.post('/get-otp', async (req, res) => {
   try {
     const { email } = req.body;
@@ -86,7 +79,6 @@ router.post('/get-otp', async (req, res) => {
       });
     }
 
-    // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({
@@ -102,32 +94,29 @@ router.post('/get-otp', async (req, res) => {
     // Send OTP email
     try {
       await sendOTPEmail(email, otp, user.name);
+      res.json({
+        success: true,
+        message: 'OTP sent successfully'
+      });
     } catch (emailError) {
       console.error('Email sending failed:', emailError);
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: 'Failed to send OTP email'
       });
     }
 
-    res.json({
-      success: true,
-      message: 'OTP sent successfully to your email'
-    });
-
   } catch (error: any) {
     console.error('Get OTP error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error generating OTP',
+      message: 'Error getting OTP',
       error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
 
-// @route   POST /api/auth/verify-otp
-// @desc    Verify OTP and complete signup/signin
-// @access  Public
+// Verify OTP route
 router.post('/verify-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -139,7 +128,6 @@ router.post('/verify-otp', async (req, res) => {
       });
     }
 
-    // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({
@@ -148,7 +136,6 @@ router.post('/verify-otp', async (req, res) => {
       });
     }
 
-    // Verify OTP
     if (!user.verifyOTP(otp)) {
       return res.status(400).json({
         success: false,
@@ -156,27 +143,28 @@ router.post('/verify-otp', async (req, res) => {
       });
     }
 
-    await user.save();
-
-    // Generate JWT token
-    const token = generateToken(user._id);
-
-    // Update last login
+    // Clear OTP after successful verification
+    user.otp = undefined;
+    user.otpExpiry = undefined;
+    user.isEmailVerified = true;
     user.lastLogin = new Date();
     await user.save();
+
+    // Generate token
+    const token = generateToken(user._id);
 
     res.json({
       success: true,
       message: 'OTP verified successfully',
       data: {
-        token,
         user: {
           id: user._id,
           name: user.name,
           email: user.email,
           isEmailVerified: user.isEmailVerified,
           lastLogin: user.lastLogin
-        }
+        },
+        token
       }
     });
 
@@ -190,88 +178,193 @@ router.post('/verify-otp', async (req, res) => {
   }
 });
 
-// @route   POST /api/auth/signin
-// @desc    Authenticate user with email and password
-// @access  Public
-router.post('/signin', validateSignin, async (req, res) => {
+// Google OAuth Sign Up
+router.post('/google/signup', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { googleToken, dateOfBirth } = req.body;
 
-    // Find user by email
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({
+    if (!googleToken || !dateOfBirth) {
+      return res.status(400).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'Google token and date of birth are required'
       });
     }
 
-    // Check if user is active
-    if (!user.isActive) {
-      return res.status(401).json({
+    // Verify Google token
+    const ticket = await googleClient.verifyIdToken({
+      idToken: googleToken,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload) {
+      return res.status(400).json({
         success: false,
-        message: 'Account is deactivated'
+        message: 'Invalid Google token'
       });
     }
 
-    // Verify password
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
+    const { sub: googleId, email, name, email_verified } = payload;
+
+    // Check if user already exists
+    let user = await User.findOne({ email });
+    
+    if (user) {
+      if (user.authMethod === 'google') {
+        // User exists with Google, generate token and log them in
+        const token = generateToken(user._id);
+        user.lastLogin = new Date();
+        await user.save();
+        
+        return res.json({
+          success: true,
+          message: 'Signed in successfully',
+          data: {
+            user: {
+              id: user._id,
+              name: user.name,
+              email: user.email,
+              isEmailVerified: user.isEmailVerified,
+              lastLogin: user.lastLogin
+            },
+            token
+          }
+        });
+      } else {
+        // User exists with email/OTP, can't use Google
+        return res.status(400).json({
+          success: false,
+          message: 'Account already exists with email/OTP. Please sign in with OTP.'
+        });
+      }
     }
 
-    // Generate JWT token
-    const token = generateToken(user._id);
+    // Create new Google user
+    user = new User({
+      name,
+      email,
+      dateOfBirth,
+      googleId,
+      googleEmail: email,
+      authMethod: 'google',
+      isEmailVerified: email_verified || false
+    });
 
-    // Update last login
-    user.lastLogin = new Date();
     await user.save();
 
-    res.json({
+    // Generate token
+    const token = generateToken(user._id);
+
+    res.status(201).json({
       success: true,
-      message: 'Signin successful',
+      message: 'Account created successfully with Google',
       data: {
-        token,
         user: {
           id: user._id,
           name: user.name,
           email: user.email,
           isEmailVerified: user.isEmailVerified,
           lastLogin: user.lastLogin
-        }
+        },
+        token
       }
     });
 
   } catch (error: any) {
-    console.error('Signin error:', error);
+    console.error('Google signup error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error during signin',
+      message: 'Error during Google signup',
       error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
 
-// @route   POST /api/auth/logout
-// @desc    Logout user (client-side token removal)
-// @access  Private
+// Google OAuth Sign In
+router.post('/google/signin', async (req, res) => {
+  try {
+    const { googleToken } = req.body;
+
+    if (!googleToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'Google token is required'
+      });
+    }
+
+    // Verify Google token
+    const ticket = await googleClient.verifyIdToken({
+      idToken: googleToken,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid Google token'
+      });
+    }
+
+    const { sub: googleId, email } = payload;
+
+    // Find user by Google ID or email
+    const user = await User.findOne({ 
+      $or: [{ googleId }, { email }],
+      authMethod: 'google'
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'No Google account found. Please sign up first.'
+      });
+    }
+
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    // Generate token
+    const token = generateToken(user._id);
+
+    res.json({
+      success: true,
+      message: 'Signed in successfully',
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          isEmailVerified: user.isEmailVerified,
+          lastLogin: user.lastLogin
+        },
+        token
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Google signin error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error during Google signin',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+});
+
+// Logout route
 router.post('/logout', authenticateToken, (req, res) => {
   res.json({
     success: true,
-    message: 'Logout successful'
+    message: 'Logged out successfully'
   });
 });
 
-// @route   GET /api/auth/me
-// @desc    Get current user profile
-// @access  Private
+// Get current user route
 router.get('/me', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select('-password -otp -otpExpiry');
-    
+    const user = await User.findById(req.user?.userId);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -281,14 +374,23 @@ router.get('/me', authenticateToken, async (req, res) => {
 
     res.json({
       success: true,
-      data: { user }
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          isEmailVerified: user.isEmailVerified,
+          lastLogin: user.lastLogin,
+          authMethod: user.authMethod
+        }
+      }
     });
 
   } catch (error: any) {
-    console.error('Get profile error:', error);
+    console.error('Get current user error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching profile',
+      message: 'Error getting user data',
       error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
