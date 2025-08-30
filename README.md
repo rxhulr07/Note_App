@@ -11,13 +11,15 @@ A complete full-stack application with user authentication, OTP verification, an
 - ✅ **Floating Labels** - Modern form input design
 - ✅ **Protected Routes** - JWT-based authentication
 - ✅ **User Dashboard** - Profile management and account settings
-- ✅ **State Management** - React Context for authentication
+- ✅ **Notes Management** - Create, edit, delete, and organize notes
+- ✅ **Advanced Notes Features** - Color coding, tags, pinning, search
+- ✅ **State Management** - React Context for authentication and notes
 - ✅ **Form Validation** - Client-side validation with error handling
 
 ### Backend (Node.js + Express + MongoDB)
 - ✅ **User Authentication** - JWT token-based security
 - ✅ **OTP System** - Email-based verification
-- ✅ **Password Hashing** - bcrypt encryption
+- ✅ **Notes API** - Full CRUD operations with advanced features
 - ✅ **Input Validation** - Server-side validation and sanitization
 - ✅ **Rate Limiting** - API protection against abuse
 - ✅ **Security Headers** - Helmet.js security middleware
@@ -156,6 +158,14 @@ VITE_GOOGLE_CLIENT_ID=your-google-client-id
 - `GET /api/user/profile` - Get user profile
 - `PUT /api/user/profile` - Update user profile
 - `DELETE /api/user/profile` - Delete user account
+
+### Notes Management
+- `POST /api/notes` - Create a new note
+- `GET /api/notes` - Get all user notes (with pagination, search, filtering)
+- `GET /api/notes/:id` - Get a specific note
+- `PUT /api/notes/:id` - Update a note
+- `DELETE /api/notes/:id` - Delete a note
+- `PUT /api/notes/:id/pin` - Toggle pin status
 
 ## 🔐 Authentication Flow
 

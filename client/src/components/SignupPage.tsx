@@ -122,7 +122,7 @@ const SignupPage: React.FC = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="signup-form">
+          <form onSubmit={(e) => e.preventDefault()} className="signup-form">
             <div className="title-section">
               <h1 className="title">Sign up</h1>
               <p className="subtitle">Sign up to enjoy the feature of HD</p>
@@ -222,7 +222,8 @@ const SignupPage: React.FC = () => {
             </button>
             
             <button 
-              type="submit" 
+              type="button" 
+              onClick={handleSubmit}
               disabled={isLoading}
               className={`signup-button ${!showOtpSection ? 'hidden' : ''}`}
             >

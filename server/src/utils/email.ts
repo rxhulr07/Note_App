@@ -7,7 +7,7 @@ const createTransporter = () => {
   
   if (process.env.NODE_ENV === 'production') {
     // Production email service configuration
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
       service: process.env.EMAIL_SERVICE || 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
@@ -16,7 +16,7 @@ const createTransporter = () => {
     });
   } else {
     // Development - using Gmail (you'll need to set up app password)
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER || 'your-email@gmail.com',

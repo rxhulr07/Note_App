@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotes } from '../contexts/NotesContext';
 import { userAPI } from '../services/api';
+import NoteCard from './NoteCard';
+import NoteForm from './NoteForm';
+import type { Note } from '../types/notes';
 import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
   const { user, logout, updateUser } = useAuth();
+  const { notes, loading, error, pagination, fetchNotes } = useNotes();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     name: user?.name || '',
@@ -12,6 +17,9 @@ const Dashboard: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [showNoteForm, setShowNoteForm] = useState(false);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [activeTab, setActiveTab] = useState<'notes' | 'profile'>('notes');
 
   const handleEdit = () => {
     setEditData({
@@ -61,6 +69,21 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleCreateNote = () => {
+    setEditingNote(null);
+    setShowNoteForm(true);
+  };
+
+  const handleEditNote = (note: Note) => {
+    setEditingNote(note);
+    setShowNoteForm(true);
+  };
+
+  const handleCloseNoteForm = () => {
+    setShowNoteForm(false);
+    setEditingNote(null);
+  };
+
   if (!user) {
     return <div>Loading...</div>;
   }
@@ -69,114 +92,140 @@ const Dashboard: React.FC = () => {
     <div className="dashboard-container">
       <div className="dashboard-header">
         <h1>Welcome, {user.name}! 👋</h1>
-        <button onClick={logout} className="logout-button">
+        <button onClick={logout} className="logout-btn">
           Logout
         </button>
       </div>
 
-      <div className="dashboard-content">
+      <div className="dashboard-tabs">
+        <button
+          className={`tab-btn ${activeTab === 'notes' ? 'active' : ''}`}
+          onClick={() => setActiveTab('notes')}
+        >
+          📝 My Notes ({notes.length})
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
+          onClick={() => setActiveTab('profile')}
+        >
+          👤 Profile
+        </button>
+      </div>
+
+      {activeTab === 'notes' && (
+        <div className="notes-section">
+          <div className="notes-header">
+            <h2>My Notes</h2>
+            <button onClick={handleCreateNote} className="create-note-btn">
+              ✨ Create Note
+            </button>
+          </div>
+
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="loading-spinner">Loading notes...</div>
+          ) : notes.length === 0 ? (
+            <div className="empty-notes">
+              <div className="empty-icon">📝</div>
+              <h3>No notes yet</h3>
+              <p>Create your first note to get started!</p>
+              <button onClick={handleCreateNote} className="create-first-note-btn">
+                Create Your First Note
+              </button>
+            </div>
+          ) : (
+            <div className="notes-grid">
+              {notes.map((note) => (
+                <NoteCard
+                  key={note._id}
+                  note={note}
+                  onEdit={handleEditNote}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'profile' && (
         <div className="profile-section">
           <h2>Profile Information</h2>
           
           {message && (
-            <div className={`message ${message.includes('success') ? 'success' : 'error'}`}>
+            <div className={`message ${message.includes('successfully') ? 'success' : 'error'}`}>
               {message}
             </div>
           )}
 
-          <div className="profile-info">
-            {isEditing ? (
-              <div className="edit-form">
-                <div className="form-group">
-                  <label>Name:</label>
-                  <input
-                    type="text"
-                    value={editData.name}
-                    onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                    disabled={isLoading}
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Date of Birth:</label>
-                  <input
-                    type="text"
-                    value={editData.dateOfBirth}
-                    onChange={(e) => setEditData({ ...editData, dateOfBirth: e.target.value })}
-                    disabled={isLoading}
-                  />
-                </div>
-
-                <div className="edit-actions">
-                  <button 
-                    onClick={handleSave} 
-                    disabled={isLoading}
-                    className="save-button"
-                  >
-                    {isLoading ? 'Saving...' : 'Save'}
-                  </button>
-                  <button 
-                    onClick={handleCancel} 
-                    disabled={isLoading}
-                    className="cancel-button"
-                  >
-                    Cancel
-                  </button>
-                </div>
+          {isEditing ? (
+            <div className="edit-form">
+              <div className="form-group">
+                <label htmlFor="edit-name">Name:</label>
+                <input
+                  type="text"
+                  id="edit-name"
+                  value={editData.name}
+                  onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
+                />
               </div>
-            ) : (
-              <div className="profile-display">
-                <div className="info-row">
-                  <span className="label">Name:</span>
-                  <span className="value">{user.name}</span>
-                </div>
-                
-                <div className="info-row">
-                  <span className="label">Email:</span>
-                  <span className="value">{user.email}</span>
-                </div>
-                
-                <div className="info-row">
-                  <span className="label">Date of Birth:</span>
-                  <span className="value">{user.dateOfBirth}</span>
-                </div>
-                
-                <div className="info-row">
-                  <span className="label">Email Verified:</span>
-                  <span className="value">
-                    {user.isEmailVerified ? '✅ Yes' : '❌ No'}
-                  </span>
-                </div>
-                
-                {user.lastLogin && (
-                  <div className="info-row">
-                    <span className="label">Last Login:</span>
-                    <span className="value">
-                      {new Date(user.lastLogin).toLocaleString()}
-                    </span>
-                  </div>
-                )}
-
-                <button onClick={handleEdit} className="edit-button">
-                  Edit Profile
+              
+              <div className="form-group">
+                <label htmlFor="edit-dob">Date of Birth:</label>
+                <input
+                  type="date"
+                  id="edit-dob"
+                  value={editData.dateOfBirth}
+                  onChange={(e) => setEditData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+                />
+              </div>
+              
+              <div className="form-actions">
+                <button onClick={handleSave} disabled={isLoading} className="save-btn">
+                  {isLoading ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button onClick={handleCancel} className="cancel-btn">
+                  Cancel
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="profile-info">
+              <div className="info-row">
+                <strong>Name:</strong> {user.name}
+              </div>
+              <div className="info-row">
+                <strong>Email:</strong> {user.email}
+              </div>
+              <div className="info-row">
+                <strong>Date of Birth:</strong> {user.dateOfBirth}
+              </div>
+              <div className="info-row">
+                <strong>Authentication Method:</strong> {user.authMethod}
+              </div>
+              
+              <div className="profile-actions">
+                <button onClick={handleEdit} className="edit-btn">
+                  Edit Profile
+                </button>
+                <button onClick={handleDeleteAccount} className="delete-btn">
+                  Delete Account
+                </button>
+              </div>
+            </div>
+          )}
         </div>
+      )}
 
-        <div className="danger-zone">
-          <h3>Danger Zone</h3>
-          <p>These actions cannot be undone.</p>
-          <button 
-            onClick={handleDeleteAccount}
-            disabled={isLoading}
-            className="delete-button"
-          >
-            Delete Account
-          </button>
-        </div>
-      </div>
+      <NoteForm
+        note={editingNote}
+        onClose={handleCloseNoteForm}
+        isOpen={showNoteForm}
+      />
     </div>
   );
 };

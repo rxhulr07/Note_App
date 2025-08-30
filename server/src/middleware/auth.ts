@@ -26,7 +26,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { userId: string };
     req.user = decoded;
-    next();
+    return next();
   } catch (error: any) {
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({

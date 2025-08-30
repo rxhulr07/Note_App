@@ -12,6 +12,13 @@ router.use(authenticateToken);
 // @access  Private
 router.get('/profile', async (req, res) => {
   try {
+    if (!req.user?.userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+    }
+
     const user = await User.findById(req.user.userId)
       .select('-password -otp -otpExpiry');
 
@@ -22,14 +29,14 @@ router.get('/profile', async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: { user }
     });
 
   } catch (error: any) {
     console.error('Get profile error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Error fetching profile',
       error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -42,6 +49,13 @@ router.get('/profile', async (req, res) => {
 // @access  Private
 router.put('/profile', async (req, res) => {
   try {
+    if (!req.user?.userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+    }
+
     const { name, dateOfBirth } = req.body;
     const updateData: any = {};
 
@@ -68,7 +82,7 @@ router.put('/profile', async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Profile updated successfully',
       data: { user }
@@ -76,7 +90,7 @@ router.put('/profile', async (req, res) => {
 
   } catch (error: any) {
     console.error('Update profile error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Error updating profile',
       error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -89,6 +103,13 @@ router.put('/profile', async (req, res) => {
 // @access  Private
 router.delete('/profile', async (req, res) => {
   try {
+    if (!req.user?.userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not authenticated'
+      });
+    }
+
     const user = await User.findByIdAndDelete(req.user.userId);
 
     if (!user) {
@@ -98,14 +119,14 @@ router.delete('/profile', async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Account deleted successfully'
     });
 
   } catch (error: any) {
     console.error('Delete profile error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Error deleting account',
       error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'

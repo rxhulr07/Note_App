@@ -41,7 +41,7 @@ export const validateSignup = (req: Request, res: Response, next: NextFunction) 
   req.body.email = email.toLowerCase().trim();
   req.body.dateOfBirth = dateOfBirth.trim();
 
-  next();
+  return next();
 };
 
 export const validateSignin = (req: Request, res: Response, next: NextFunction) => {
@@ -75,5 +75,5 @@ export const validateSignin = (req: Request, res: Response, next: NextFunction) 
   // Sanitize inputs
   req.body.email = email.toLowerCase().trim();
 
-  next();
+  return next();
 };

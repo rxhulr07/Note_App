@@ -110,7 +110,7 @@ const SigninPage: React.FC = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="signin-form">
+          <form onSubmit={(e) => e.preventDefault()} className="signin-form">
             <div className="title-section">
               <h1 className="title">Sign in</h1>
               <p className="subtitle">Please login to continue to your account</p>
@@ -189,27 +189,45 @@ const SigninPage: React.FC = () => {
             </div>
 
             <button 
-              type={otpSent && otpEntered ? "submit" : "button"}
-              onClick={otpSent && otpEntered ? undefined : async () => {
-                if (!formData.email) {
-                  setMessage('Please enter your email first');
-                  setMessageType('error');
-                  return;
-                }
-                try {
-                  setIsLoading(true);
-                  setMessage('');
-                  await getOTP(formData.email);
-                  setOtpSent(true);
-                  setOtpEntered(false);
-                  setFormData(prev => ({ ...prev, otp: '' }));
-                  setMessage('OTP sent to your email! Please check and enter above.');
-                  setMessageType('success');
-                } catch (error: any) {
-                  setMessage(error.message || 'Failed to send OTP');
-                  setMessageType('error');
-                } finally {
-                  setIsLoading(false);
+              type="button"
+              onClick={async () => {
+                if (otpSent && otpEntered) {
+                  // Handle sign in
+                  try {
+                    setIsLoading(true);
+                    setMessage('');
+                    await verifyOTP(formData.email, formData.otp);
+                    setMessage('Sign in successful! Redirecting...');
+                    setMessageType('success');
+                    setTimeout(() => navigate('/dashboard'), 2000);
+                  } catch (error: any) {
+                    setMessage(error.message || 'Sign in failed');
+                    setMessageType('error');
+                  } finally {
+                    setIsLoading(false);
+                  }
+                } else {
+                  // Handle get OTP
+                  if (!formData.email) {
+                    setMessage('Please enter your email first');
+                    setMessageType('error');
+                    return;
+                  }
+                  try {
+                    setIsLoading(true);
+                    setMessage('');
+                    await getOTP(formData.email);
+                    setOtpSent(true);
+                    setOtpEntered(false);
+                    setFormData(prev => ({ ...prev, otp: '' }));
+                    setMessage('OTP sent to your email! Please check and enter above.');
+                    setMessageType('success');
+                  } catch (error: any) {
+                    setMessage(error.message || 'Failed to send OTP');
+                    setMessageType('error');
+                  } finally {
+                    setIsLoading(false);
+                  }
                 }
               }}
               disabled={isLoading}

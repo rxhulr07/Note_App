@@ -107,4 +107,70 @@ export const userAPI = {
   },
 };
 
+// Notes API calls
+export const notesAPI = {
+  // Get all notes
+  getNotes: async (params?: { 
+    page?: number; 
+    limit?: number; 
+    search?: string; 
+    tag?: string; 
+    sortBy?: string; 
+    sortOrder?: string; 
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.tag) queryParams.append('tag', params.tag);
+    if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
+    if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+    
+    const response = await api.get(`/notes?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  // Get single note
+  getNote: async (id: string) => {
+    const response = await api.get(`/notes/${id}`);
+    return response.data;
+  },
+
+  // Create note
+  createNote: async (data: {
+    title: string;
+    content: string;
+    tags?: string[];
+    color?: string;
+    isPinned?: boolean;
+  }) => {
+    const response = await api.post('/notes', data);
+    return response.data;
+  },
+
+  // Update note
+  updateNote: async (id: string, data: {
+    title?: string;
+    content?: string;
+    tags?: string[];
+    color?: string;
+    isPinned?: boolean;
+  }) => {
+    const response = await api.put(`/notes/${id}`, data);
+    return response.data;
+  },
+
+  // Delete note
+  deleteNote: async (id: string) => {
+    const response = await api.delete(`/notes/${id}`);
+    return response.data;
+  },
+
+  // Toggle pin status
+  togglePin: async (id: string) => {
+    const response = await api.put(`/notes/${id}/pin`);
+    return response.data;
+  }
+};
+
 export default api;
