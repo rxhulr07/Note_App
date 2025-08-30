@@ -36,36 +36,6 @@ const SigninPage: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      setIsLoading(true);
-      setMessage('');
-
-      // Check if both email and OTP are provided
-      if (!formData.email || !formData.otp) {
-        setMessage('Please fill in both email and OTP');
-        setMessageType('error');
-        return;
-      }
-
-      // Verify OTP
-      await verifyOTP(formData.email, formData.otp);
-      setMessage('Login successful! Redirecting...');
-      setMessageType('success');
-      
-      // Redirect to dashboard or intended page
-      const from = (location.state as any)?.from?.pathname || '/dashboard';
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 2000);
-    } catch (error: any) {
-      setMessage(error.message || 'Sign in failed');
-      setMessageType('error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
@@ -88,9 +58,9 @@ const SigninPage: React.FC = () => {
     setMessageType('error');
   };
 
-  const toggleOtpVisibility = () => {
-    setShowOtp(!showOtp);
-  };
+  // const toggleOtpVisibility = () => {
+  //   setShowOtp(!showOtp);
+  // };
 
   return (
     <div className="signin-container">
