@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 
 // Import routes
@@ -18,16 +17,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Security middleware
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginOpenerPolicy: false, // disable COOP so postMessage works
+  })
+);
 app.use(morgan('combined'));
 
-// Rate limiting - temporarily disabled due to path-to-regexp error
-// const limiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 100, // limit each IP to 100 requests per windowMs
-//   message: 'Too many requests from this IP, please try again later.'
-// });
-// app.use('/api', limiter);
+
 
 // CORS configuration
 app.use(cors({
@@ -59,13 +56,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// 404 handler - temporarily removed due to path-to-regexp issues
-// app.use('/api/*', (req, res) => {
-//   res.status(404).json({ 
-//     success: false, 
-//     message: 'API route not found' 
-//   });
-// });
+
 
 // MongoDB connection
 const connectDB = async () => {
