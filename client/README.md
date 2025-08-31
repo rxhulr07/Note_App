@@ -1,69 +1,69 @@
-# React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Note App Frontend
 
-Currently, two official plugins are available:
+This is the frontend for Note App, built with React, TypeScript, and Vite. It provides a responsive UI for user authentication, OTP verification, and notes management.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+- Responsive design (mobile-first)
+- Signup, signin, and OTP verification
+- Protected routes (JWT-based)
+- User dashboard (profile, account settings)
+- Notes management (create, edit, delete, organize)
+- Color coding, tags, pinning, search
+- State management (React Context)
+- Form validation and error handling
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Prerequisites
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Node.js (v16 or higher)
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+## Setup & Installation
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Clone the repository and navigate to the client folder:
+  ```bash
+  git clone <repository-url>
+  cd Note_App/client
+  ```
+2. Install dependencies:
+  ```bash
+  npm install
+  ```
+3. Copy `env.example` to `.env` and fill in your API URL:
+  ```env
+  VITE_API_URL=https://your-backend-url.onrender.com/api
+  VITE_GOOGLE_CLIENT_ID=your-google-client-id
+  ```
+4. Start the development server:
+  ```bash
+  npm run dev
+  ```
+
+## Project Structure
+
+```
+src/
+  app/           # Routing and providers (providers.tsx, router.tsx)
+  assets/        # Images and static assets
+  components/    # Dashboard, NoteCard, NoteForm, Auth pages, ProtectedRoute
+  contexts/      # AuthContext, NotesContext
+  services/      # API service (api.ts)
+  styles/        # CSS modules and global styles
+  types/         # TypeScript types (notes.ts)
+  main.tsx       # App entry point
+public/          # Static files
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Deployment
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+You can deploy this frontend on Render, Vercel, Netlify, or any static hosting platform. For Render:
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+1. Push your code to GitHub.
+2. Create a new Static Site on Render and select the `client` folder.
+3. Set build command: `npm install && npm run build`
+4. Set publish directory: `dist`
+5. Add environment variables from `.env.example`.
+
+---
+
+**For more details, see the main README in the root folder.**

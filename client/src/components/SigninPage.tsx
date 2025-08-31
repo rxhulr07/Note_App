@@ -6,6 +6,7 @@ import './SigninPage.css';
 import hdLogo from '../assets/hd.png';
 import heroImg from '../assets/hero_img.jpg';
 import mobileImage from '../assets/img.svg';
+import eyeIcon from '../assets/eye.svg';
 
 const SigninPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ const SigninPage: React.FC = () => {
     otp: ''
   });
 
-  // const [showOtp, setShowOtp] = useState(false);
+  const [showOtp, setShowOtp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
@@ -110,7 +111,7 @@ const SigninPage: React.FC = () => {
             <div className="form-group">
               <div className="otp-input-container">
                 <input
-                  type="text"
+                  type={showOtp ? "text" : "password"}
                   id="otp"
                   name="otp"
                   value={formData.otp}
@@ -118,7 +119,13 @@ const SigninPage: React.FC = () => {
                   placeholder="OTP"
                   className="form-input"
                 />
-                <span className="eye-icon">👁️</span>
+                <img
+                  src={eyeIcon}
+                  alt={showOtp ? "Hide OTP" : "Show OTP"}
+                  className="eye-icon"
+                  style={{width: '24px', height: '24px', position: 'absolute', right: '16px', cursor: 'pointer', zIndex: 1}}
+                  onClick={() => setShowOtp((prev) => !prev)}
+                />
               </div>
             </div>
 

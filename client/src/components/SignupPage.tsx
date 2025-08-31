@@ -6,20 +6,23 @@ import './SignupPage.css';
 import hdLogo from '../assets/hd.png';
 import heroImg from '../assets/hero_img.jpg';
 import mobileImage from '../assets/img.svg';
+import calendarImg from '../assets/calendar.jpg';
+import eyeIcon from '../assets/eye.svg';
 
 const SignupPage: React.FC = () => {
   const navigate = useNavigate();
   const { signup, getOTP, verifyOTP, googleSignUp } = useAuth();
-  const [formData, setFormData] = useState({
-    name: '',
-    dateOfBirth: '',
-    email: '',
-    otp: ''
-  });
-  const [showOtpSection, setShowOtpSection] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState<'success' | 'error'>('success');
+    const [formData, setFormData] = useState({
+      name: '',
+      dateOfBirth: '',
+      email: '',
+      otp: ''
+    });
+    const [showOtpSection, setShowOtpSection] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [message, setMessage] = useState('');
+    const [messageType, setMessageType] = useState<'success' | 'error'>('success');
+    const [showOtp, setShowOtp] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -152,7 +155,7 @@ const SignupPage: React.FC = () => {
             <div className="form-group">
               <div className="floating-label-container">
                 <div className="date-input-container">
-                  <span className="calendar-icon">📅</span>
+                  <img src={calendarImg} alt="Calendar" className="calendar-icon" style={{width: '24px', height: '24px', position: 'absolute', left: '16px', zIndex: 1}} />
                   <input
                     type="text"
                     id="dateOfBirth"
@@ -161,6 +164,7 @@ const SignupPage: React.FC = () => {
                     onChange={handleInputChange}
                     className="form-input"
                     placeholder=" "
+                    style={{paddingLeft: '48px'}}
                   />
                 </div>
                 <label htmlFor="dateOfBirth" className="floating-label">Date of Birth</label>
@@ -186,7 +190,7 @@ const SignupPage: React.FC = () => {
               <div className="form-group">
                 <div className="otp-input-container">
                   <input
-                    type="text"
+                    type={showOtp ? "text" : "password"}
                     id="otp"
                     name="otp"
                     value={formData.otp}
@@ -194,7 +198,13 @@ const SignupPage: React.FC = () => {
                     placeholder="OTP"
                     className="form-input"
                   />
-                  <span className="eye-icon">👁️</span>
+                  <img
+                    src={eyeIcon}
+                    alt={showOtp ? "Hide OTP" : "Show OTP"}
+                    className="eye-icon"
+                    style={{width: '24px', height: '24px', position: 'absolute', right: '16px', cursor: 'pointer', zIndex: 1}}
+                    onClick={() => setShowOtp((prev) => !prev)}
+                  />
                 </div>
               </div>
             )}
