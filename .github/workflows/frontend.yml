@@ -3,11 +3,14 @@ name: Frontend Deploy
 on:
   push:
     branches:
-      - main  # change if you deploy from another branch
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
@@ -18,11 +21,9 @@ jobs:
           node-version: 18
 
       - name: Install Dependencies
-        working-directory: client
         run: npm install
 
       - name: Build Project
-        working-directory: client
         run: npm run build
 
       - name: Deploy to Vercel
@@ -31,6 +32,3 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./client
-
-
